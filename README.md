@@ -18,6 +18,9 @@ bam2fastq -c 9 m54078_170901_180552.subreads.bam -o m54078_170901_180552.subread
 bam2fastq -c 9 m54078_170902_041524.subreads.bam -o m54078_170902_041524.subreads
 bam2fastq -c 9 m54078_170902_142504.subreads.bam -o m54078_170902_142504.subreads
 bam2fastq -c 9 m54078_170903_003441.subreads.bam -o m54078_170903_003441.subreads 
+
+cat *.subreads.fastq > Plantago_pacbio.fastq
+bgzip -c -l 9 Plantago_pacbio.fastq > Plantago_pacbio.fastq.gz
 ```
 
 
@@ -203,4 +206,5 @@ cat file_3/*.fasta > polished_3.fasta
 cat file_4/*.fasta > polished_4.fasta
 
 cat polished_*.fasta > polished.fasta
+bgzip -c -l 9 polished.fasta > polished.fasta.gz
 ```
