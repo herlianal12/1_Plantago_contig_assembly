@@ -55,6 +55,73 @@ time minimap2 \
 | samtools sort \
 --threads 2 -l 7 \
 -o $output_2
+
+
+bamToFastq -i assembly/raw_reads/Plantago_pacbio_no_chloro.bam -fq assembly/raw_reads/Plantago_pacbio_no_chloro.fastq
+bgzip -c -l 9 Plantago_pacbio_no_chloro.fastq > Plantago_pacbio_no_chloro.fastq.gz
+
+
+data="assembly/raw_reads/Plantago_pacbio_no_chloro.fastq.gz"
+index="references/plantago_mitocondria.fasta.gz.mmi"
+output="assembly/raw_reads/Plantago_pacbio_no_mito_chloro.bam"
+
+time minimap2 \
+-ax map-pb \
+-t 2 $index $data \
+| samtools view -f 0x04 -u \
+| samtools sort \
+--threads 2 -l 7 \
+-o $output
+
+bamToFastq -i assembly/raw_reads/Plantago_pacbio_no_mito_chloro.bam -fq assembly/raw_reads/Plantago_pacbio_no_mito_chloro.fastq
+bgzip -c -l 9 Plantago_pacbio_no_mito_chloro.fastq > Plantago_pacbio_no_mito_chloro.fastq.gz
+
+
+data="assembly/raw_reads/Plantago_pacbio_no_mito_chloro.bam.gz"
+index="database_rrna/SILVA_128_LSURef_tax_silva.fasta.gz.mmi"
+output="assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1.bam"
+
+time minimap2 \
+-ax map-pb \
+-t 2 $index $data \
+| samtools view -f 0x04 -u \
+| samtools sort \
+--threads 2 -l 7 \
+-o $output
+
+bamToFastq -i assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2_3.bam -fq assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1.fastq
+bgzip -c -l 9 Plantago_pacbio_no_mito_chloro_rrna1_2_3.fastq > Plantago_pacbio_no_mito_chloro_rrna1.fastq.gz
+
+data="assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1.bam.gz"
+index="database_rrna/SILVA_138_SSURef_NR99_tax_silva.fasta.gz.mmi"
+output="assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2.bam"
+
+time minimap2 \
+-ax map-pb \
+-t 2 $index $data \
+| samtools view -f 0x04 -u \
+| samtools sort \
+--threads 2 -l 7 \
+-o $output
+
+bamToFastq -i assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2_3.bam -fq assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2.fastq
+bgzip -c -l 9 Plantago_pacbio_no_mito_chloro_rrna1_2_3.fastq > Plantago_pacbio_no_mito_chloro_rrna1_2.fastq.gz
+
+
+data="assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2.bam.gz"
+index="database_rrna/SILVA_138_SSURef_tax_silva.fasta.gz.mmi"
+output="assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2_3.bam"
+
+time minimap2 \
+-ax map-pb \
+-t 2 $index $data \
+| samtools view -f 0x04 -u \
+| samtools sort \
+--threads 2 -l 7 \
+-o $output
+
+bamToFastq -i assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2_3.bam -fq assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2_3.fastq
+bgzip -c -l 9 Plantago_pacbio_no_mito_chloro_rrna1_2_3.fastq > Plantago_pacbio_no_mito_chloro_rrna1_2_3.fastq.gz
 ```
 
 canu.sh
@@ -207,4 +274,23 @@ cat file_4/*.fasta > polished_4.fasta
 
 cat polished_*.fasta > polished.fasta
 bgzip -c -l 9 polished.fasta > polished.fasta.gz
+```
+
+purging.sh
+```
+minimap2 -d /hpcfs/users/a1697274/genome/assembly/plantago_genome_sequences/sequel/polished_seqs/polished.fasta.mmi /hpcfs/users/a1697274/genome/assembly/plantago_genome_sequences/sequel/polished_seqs/polished.fasta
+
+minimap2 -t 4 -ax map-pb /hpcfs/users/a1697274/genome/assembly/plantago_genome_sequences/sequel/polished_seqs/polished.fasta.mmi \
+/hpcfs/users/a1697274/genome/assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2_3.fasta --secondary=no \
+| samtools sort -m 1G -o after_polishing_aligned.bam -T after_polishing_tmp.ali
+
+purge_haplotigs  hist  -b after_polishing_aligned.bam  \
+-g /hpcfs/users/a1697274/genome/assembly/plantago_genome_sequences/sequel/polished_seqs/polished.fasta  -t 4 -d 200
+
+purge_haplotigs cov -i ./after_polishing_aligned.bam.gencov -l 5 -m 70 -h 190 -o try1_coverage_stats.csv -j 80 -s 80
+
+purge_haplotigs purge -g /hpcfs/users/a1697274/genome/assembly/plantago_genome_sequences/sequel/polished_seqs/polished.fasta \
+-c try1_coverage_stats.csv -t 4 -o try1_final
+
+purge_haplotigs  clip  -p try1_final.fasta -h try1_final.haplotigs.fasta
 ```
