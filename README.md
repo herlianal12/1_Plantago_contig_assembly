@@ -28,9 +28,6 @@ minimap_index.sh
 ```
 minimap2 -d references/plantago_chloroplast.fasta.gz.mmi references/plantago_chloroplast.fasta.gz
 minimap2 -d references/plantago_mitocondria.fasta.gz.mmi references/plantago_mitocondria.fasta.gz
-minimap2 -d database_rrna/SILVA_128_LSURef_tax_silva.fasta.gz.mmi database_rrna/SILVA_128_LSURef_tax_silva.fasta.gz
-minimap2 -d database_rrna/SILVA_138_SSURef_NR99_tax_silva.fasta.gz.mmi database_rrna/SILVA_138_SSURef_NR99_tax_silva.fasta.gz
-minimap2 -d database_rrna/SILVA_138_SSURef_tax_silva.fasta.gz.mmi database_rrna/SILVA_138_SSURef_tax_silva.fasta.gz
 ```
 
 minimap_samtools.sh
@@ -76,68 +73,23 @@ time minimap2 \
 bamToFastq -i assembly/raw_reads/Plantago_pacbio_no_mito_chloro.bam -fq assembly/raw_reads/Plantago_pacbio_no_mito_chloro.fastq
 bgzip -c -l 9 Plantago_pacbio_no_mito_chloro.fastq > Plantago_pacbio_no_mito_chloro.fastq.gz
 
-
-data="assembly/raw_reads/Plantago_pacbio_no_mito_chloro.bam.gz"
-index="database_rrna/SILVA_128_LSURef_tax_silva.fasta.gz.mmi"
-output="assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1.bam"
-
-time minimap2 \
--ax map-pb \
--t 2 $index $data \
-| samtools view -f 0x04 -u \
-| samtools sort \
---threads 2 -l 7 \
--o $output
-
-bamToFastq -i assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2_3.bam -fq assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1.fastq
-bgzip -c -l 9 Plantago_pacbio_no_mito_chloro_rrna1_2_3.fastq > Plantago_pacbio_no_mito_chloro_rrna1.fastq.gz
-
-data="assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1.bam.gz"
-index="database_rrna/SILVA_138_SSURef_NR99_tax_silva.fasta.gz.mmi"
-output="assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2.bam"
-
-time minimap2 \
--ax map-pb \
--t 2 $index $data \
-| samtools view -f 0x04 -u \
-| samtools sort \
---threads 2 -l 7 \
--o $output
-
-bamToFastq -i assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2_3.bam -fq assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2.fastq
-bgzip -c -l 9 Plantago_pacbio_no_mito_chloro_rrna1_2_3.fastq > Plantago_pacbio_no_mito_chloro_rrna1_2.fastq.gz
-
-
-data="assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2.bam.gz"
-index="database_rrna/SILVA_138_SSURef_tax_silva.fasta.gz.mmi"
-output="assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2_3.bam"
-
-time minimap2 \
--ax map-pb \
--t 2 $index $data \
-| samtools view -f 0x04 -u \
-| samtools sort \
---threads 2 -l 7 \
--o $output
-
-bamToFastq -i assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2_3.bam -fq assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2_3.fastq
-bgzip -c -l 9 Plantago_pacbio_no_mito_chloro_rrna1_2_3.fastq > Plantago_pacbio_no_mito_chloro_rrna1_2_3.fastq.gz
 ```
 
 canu.sh
 ```
-canu -p "Po_new" -d assembly/canu_po genomeSize=522m \
--correct -pacbio assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2_3.fastq.gz \
-corMhapSensitivity=high corMinCoverage=0 corOutCoverage=200 correctedErrorRate=0.105
+#canu -p Po_2021 -d canu_2021 genomeSize=584m \
+#-correct -pacbio Plantago_pacbio_no_mito_chloro.fastq.gz \
+#corMhapSensitivity=high corMinCoverage=0 corOutCoverage=200 correctedErrorRate=0.105 \
+#gridEngineArrayOption="-a ARRAY_JOBS%20" gridOptions="--partition=batch --nodes=1 --time=24:00:00"
 
-canu -p "Po_new" -d assembly/canu_po genomeSize=522m \
--trim -pacbio-corrected assembly/canu_po/Po_new.correctedReads.fasta.gz \
-correctedErrorRate=0.105
+#canu -p Po_2021 -d canu_2021 genomeSize=584m \
+#-trim -corrected -pacbio "canu_2021/Po_2021.correctedReads.fasta.gz" \
+#correctedErrorRate=0.105 gridOptions="--partition=batch --nodes=1 --time=72:00:00"
 
-canu -p "Po_new" -d assembly/canu_po genomeSize=522m \
--assemble -pacbio-corrected assembly/canu_po/Po_new.trimmedReads.fasta.gz \
-correctedErrorRate=0.105 batMemory=9 ovbMemory=16 ovsMemory=16 executiveMemory=1 cnsMemory=20 cnsThreads=8 \
-gridOptions="--partition=batch,highmem --time=72:00:00" "batOptions=-dg 3 -db 3 -dr 1 -ca 500 -cp 50" utgovlMemory=30
+#canu -p Po_2021 -d canu_2021 genomeSize=584m \
+#-assemble -trimmed -corrected -pacbio "canu_2021/Po_2021.trimmedReads.fasta.gz" \
+#correctedErrorRate=0.105 batMemory=9 ovbMemory=16 ovsMemory=16 executiveMemory=1 cnsMemory=20 cnsThreads=8 \
+#gridOptions="--partition=batch --nodes=1 --time=24:00:00" "batOptions=-dg 3 -db 3 -dr 1 -ca 500 -cp 50" utgovlMemory=30
 ```
 
 polish.sh
@@ -153,7 +105,7 @@ dataset create --type SubreadSet --name Plantago PlantagoGenomeSet.subreadset.xm
 grep ’@’ ?.fastq > PlantagoGenome.txt
 sed 's|[@,]||g' PlantagoGenome.txt > PlantagoGenome_final.txt
 dataset filter PlantagoGenomeSet.subreadset.xml Plantago_filter.subreadset.xml 'qname=PlantagoGenome_final.txt'
-pbmm2 align --log-level INFO --log-file pbmm2_log --sample Plantago /fast/users/a1697274/genome/assembly/canu_po/additional_files/Po_new_new.contigs.fasta.mmi Plantago_filter.subreadset.xml Plantago.aligned.bam
+pbmm2 align --log-level INFO --log-file pbmm2_log --sample Plantago /hpcfs/users/a1697274/canu_2021/Po_2021.contigs.fasta.mmi Plantago_filter.subreadset.xml Plantago.aligned.bam
 
 samtools sort -m 10G -o Plantago_sorted_aligned.bam -T tmp.ali Plantago.aligned.bam
 samtools index -b Plantago_sorted_aligned.bam Plantago_sorted_aligned.bam.bai
@@ -171,10 +123,15 @@ do
 samtools index -b $i $i.bai
 done
 
-tig00000006-tig00002996
-tig00003003-tig00005999
-tig00006000-tig00210499
-tig00210500-tig00211778
+mkdir bam_0 bam_1 bam_2 bam_3 bam_4 bam_5 bam_6 bam_7
+mv tig00007* bam_7
+mv tig00006* bam_6
+mv tig00005* bam_5
+mv tig00004* bam_4
+mv tig00003* bam_3
+mv tig00002* bam_2
+mv tig00001* bam_1
+mv tig0000* bam_0
 ```
 ```
 #!/usr/bin/env python
@@ -195,11 +152,15 @@ for line in f :
 of.close()
 
 ####modifying from https://raw.githubusercontent.com/harish0201/General_Scripts/master/Fasta_splitter.py
-tig00000006-tig00002996
-tig00003003-tig00005999
-tig00006000-tig00210499
-tig00210500-tig00211778
-
+mkdir fasta_0 fasta_1 fasta_2 fasta_3 fasta_4 fasta_5 fasta_6 fasta_7
+mv tig00007* fasta_7
+mv tig00006* fasta_6
+mv tig00005* fasta_5
+mv tig00004* fasta_4
+mv tig00003* fasta_3
+mv tig00002* fasta_2
+mv tig00001* fasta_1
+mv tig0000* fasta_0
 
 for i in *.fasta.fai
 do
@@ -217,19 +178,27 @@ pbmm2 index $file $OUTPUT &
 done
 )
 
+mkdir fasta_0 fasta_1 fasta_2 fasta_3 fasta_4 fasta_5 fasta_6 fasta_7
+mv tig00007* fasta_7
+mv tig00006* fasta_6
+mv tig00005* fasta_5
+mv tig00004* fasta_4
+mv tig00003* fasta_3
+mv tig00002* fasta_2
+mv tig00001* fasta_1
+mv tig0000* fasta_0
+
 ```
 ```
 awk '{ print $1":0-"$2 }' Po_new_new.contigs.fasta.gz.fai > window.txt
-tig00000006-tig00002996 --> window_1.txt
-tig00003003-tig00005999 --> window_2.txt
-tig00006000-tig00210499 --> window_3.txt
-tig00210500-tig00211778 --> window_4.txt
-
-Head –n 1100
-Head –n 2194 file.txt | tail –n 1094
-Head –n 3114 file.txt | tail –n 920
-Head –n 4365 file.txt | tail –n 1251
-
+grep "tig00007*" window.txt > window_7.txt
+grep "tig00006*" window.txt > window_6.txt
+grep "tig00005*" window.txt > window_5.txt
+grep "tig00004*" window.txt > window_4.txt
+grep "tig00003*" window.txt > window_3.txt
+grep "tig00002*" window.txt > window_2.txt
+grep "tig00001*" window.txt > window_1.txt
+grep "tig0000*" window.txt > window_0.txt
 
 for window in `cat window_1.txt`
 do
