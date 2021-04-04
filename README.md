@@ -90,6 +90,9 @@ canu.sh
 #-assemble -trimmed -corrected -pacbio "canu_2021/Po_2021.trimmedReads.fasta.gz" \
 #correctedErrorRate=0.105 batMemory=9 ovbMemory=16 ovsMemory=16 executiveMemory=1 cnsMemory=20 cnsThreads=8 \
 #gridOptions="--partition=batch --nodes=1 --time=24:00:00" "batOptions=-dg 3 -db 3 -dr 1 -ca 500 -cp 50" utgovlMemory=30
+
+cat Po_2021.contigs.fasta Po_2021.unassembled.fasta > Po_2021.assembled.unassembled.fasta
+pbmm2 index Po_2021.assembled.unassembled.fasta Po_2021.assembled.unassembled.fasta.mmi
 ```
 
 polish.sh
@@ -105,7 +108,7 @@ dataset create --type SubreadSet --name Plantago PlantagoGenomeSet.subreadset.xm
 grep ’@’ ?.fastq > PlantagoGenome.txt
 sed 's|[@,]||g' PlantagoGenome.txt > PlantagoGenome_final.txt
 dataset filter PlantagoGenomeSet.subreadset.xml Plantago_filter.subreadset.xml 'qname=PlantagoGenome_final.txt'
-pbmm2 align --log-level INFO --log-file pbmm2_log --sample Plantago /hpcfs/users/a1697274/canu_2021/Po_2021.contigs.fasta.mmi Plantago_filter.subreadset.xml Plantago.aligned.bam
+pbmm2 align --log-level INFO --log-file pbmm2_log --sample Plantago /hpcfs/users/a1697274/canu_2021/Po_2021.assembled.unassembled.fasta.mmi Plantago_filter.subreadset.xml Plantago.aligned.bam
 
 samtools sort -m 10G -o Plantago_sorted_aligned.bam -T tmp.ali Plantago.aligned.bam
 samtools index -b Plantago_sorted_aligned.bam Plantago_sorted_aligned.bam.bai
@@ -191,14 +194,14 @@ mv tig0000* fasta_0
 ```
 ```
 awk '{ print $1":0-"$2 }' Po_new_new.contigs.fasta.gz.fai > window.txt
-grep "tig00007*" window.txt > window_7.txt
-grep "tig00006*" window.txt > window_6.txt
-grep "tig00005*" window.txt > window_5.txt
-grep "tig00004*" window.txt > window_4.txt
-grep "tig00003*" window.txt > window_3.txt
-grep "tig00002*" window.txt > window_2.txt
-grep "tig00001*" window.txt > window_1.txt
-grep "tig0000*" window.txt > window_0.txt
+window_7.txt
+window_6.txt
+window_5.txt
+window_4.txt
+window_3.txt
+window_2.txt
+window_1.txt
+window_0.txt
 
 for window in `cat window_1.txt`
 do
@@ -236,10 +239,16 @@ echo "gcpp --max-iterations 4 --log-level INFO --log-file polished_seqs/file_4/$
 split/bam_4/${line}.bam"
 done | parallel -j7 --tmpdir TMPDIR_4 --compress
 
+
+
+cat file_0/*.fasta > polished_0.fasta
 cat file_1/*.fasta > polished_1.fasta
 cat file_2/*.fasta > polished_2.fasta
 cat file_3/*.fasta > polished_3.fasta
 cat file_4/*.fasta > polished_4.fasta
+cat file_5/*.fasta > polished_5.fasta
+cat file_6/*.fasta > polished_6.fasta
+cat file_7/*.fasta > polished_7.fasta
 
 cat polished_*.fasta > polished.fasta
 bgzip -c -l 9 polished.fasta > polished.fasta.gz
