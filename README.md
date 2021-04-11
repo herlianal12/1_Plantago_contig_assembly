@@ -91,8 +91,7 @@ canu.sh
 #correctedErrorRate=0.105 batMemory=9 ovbMemory=16 ovsMemory=16 executiveMemory=1 cnsMemory=20 cnsThreads=8 \
 #gridOptions="--partition=batch --nodes=1 --time=24:00:00" "batOptions=-dg 3 -db 3 -dr 1 -ca 500 -cp 50" utgovlMemory=30
 
-cat Po_2021.contigs.fasta Po_2021.unassembled.fasta > Po_2021.assembled.unassembled.fasta
-pbmm2 index Po_2021.assembled.unassembled.fasta Po_2021.assembled.unassembled.fasta.mmi
+
 ```
 
 polish.sh
