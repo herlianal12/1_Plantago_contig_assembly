@@ -1,15 +1,41 @@
 # Plantago contig assembly
-Main steps in generating contigs
-1. Genomic DNA extraction
-2. PacBio CLR sequencing
+
+This respository aims to document every step in generating contigs from PacBio CLR reads.
+
+Main steps in generating contigs:
+1. Genomic DNA extraction and PacBio CLR sequencing
+2. Installing bioinformatic tools
 3. Converting PacBio unaligned bam files into fastq files
 4. Removing contaminant
-5. Contig assembly
+5. Genome size prediction and contig assembly
 6. Polishing
 7. Purging and clipping haplotig
 
+Step 1. Genomic DNA extraction and sequencing process were explained in this publication.
 
-bamtofastq.sh
+Step 2. Installing softwares
+
+I used conda to install all tools and I created several environments due to incompatibility of softwares.
+An example how to create conda environment:
+```
+conda create -n pacbio
+conda activate pacbio
+conda install -c bioconda bam2fastx  
+```
+List of main tools for contig assembly:
+- Pacbio tools (bam2fastx 1.3.1, pbbam 1.6.0, pbcommand 2.1.1, pbcopper 1.9.1, pbcore 2.1.2, pbcoretools 0.8.1, pbgcpp 1.0.0, pbmm2 1.4.0, pbzip2 1.1.13) :   https://github.com/PacificBiosciences/pbbioconda
+- tabix 0.2.6 : https://github.com/samtools/tabix
+- canu 2.1.1 : https://github.com/marbl/canu 
+- minimap2 2.17 : https://github.com/lh3/minimap2
+- samtools 1.11 :https://github.com/samtools/samtools
+- bedtools 2.29.2 : https://github.com/arq5x/bedtools2 or https://bedtools.readthedocs.io/en/latest/content/tools/bamtofastq.html
+
+
+Step 3. Converting PacBio unaligned bam files into fastq files
+
+Raw data from PacBio CLR are in bam format. For downstream analysis, we need to convert them into fastq files. 
+
+Here is the example of our data
 ```
 bam2fastq -c 9 m54078_170831_060817.subreads.bam -o m54078_170831_060817.subreads
 bam2fastq -c 9 m54078_170831_160707.subreads.bam -o m54078_170831_160707.subreads
@@ -23,19 +49,19 @@ cat *.subreads.fastq > Plantago_pacbio.fastq
 bgzip -c -l 9 Plantago_pacbio.fastq > Plantago_pacbio.fastq.gz
 ```
 
+Step 4. Removing contaminant
+I found removing contaminants from PacBio raw reads helped me to solve my problem in contig assembly (Canu). We interested in nuclear genome, so chloroplast and mitochondrial reads are considered as contaminants. Plantago chloroplast genome can be found at https://www.ncbi.nlm.nih.gov/nuccore/MH205737.1/) and a mithochondrial gene is in here https://www.ncbi.nlm.nih.gov/nuccore/EU069524.1/). Only one mitochondrial gene was found in NCBI database (mitochondrial genome is still not available in May 2021). 
 
-minimap_index.sh
+Creating index file
 ```
 minimap2 -d references/plantago_chloroplast.fasta.gz.mmi references/plantago_chloroplast.fasta.gz
 minimap2 -d references/plantago_mitocondria.fasta.gz.mmi references/plantago_mitocondria.fasta.gz
 ```
-
-minimap_samtools.sh
+Removing chroloplast reads
 ```
 data="assembly/raw_reads/Plantago_pacbio.fastq.gz"
 index="references/plantago_chloroplast.fasta.gz.mmi"
-output_1="assembly/raw_reads/Plantago_pacbio_no_chloro.bam"
-output_2="assembly/raw_reads/Plantago_pacbio_chloroplast.bam"
+output="assembly/raw_reads/Plantago_pacbio_no_chloro.bam"
 
 time minimap2 \
 -ax map-pb \
@@ -43,21 +69,15 @@ time minimap2 \
 | samtools view -f 0x04 -u \
 | samtools sort \
 --threads 2 -l 7 \
--o $output_1
-
-time minimap2 \
--ax map-pb \
--t 2 $index $data \
-| samtools view -F 0x04 -u \
-| samtools sort \
---threads 2 -l 7 \
--o $output_2
+-o $output
 
 
 bamToFastq -i assembly/raw_reads/Plantago_pacbio_no_chloro.bam -fq assembly/raw_reads/Plantago_pacbio_no_chloro.fastq
 bgzip -c -l 9 Plantago_pacbio_no_chloro.fastq > Plantago_pacbio_no_chloro.fastq.gz
+```
 
-
+Removing mithochondrial reads
+```
 data="assembly/raw_reads/Plantago_pacbio_no_chloro.fastq.gz"
 index="references/plantago_mitocondria.fasta.gz.mmi"
 output="assembly/raw_reads/Plantago_pacbio_no_mito_chloro.bam"
@@ -72,41 +92,56 @@ time minimap2 \
 
 bamToFastq -i assembly/raw_reads/Plantago_pacbio_no_mito_chloro.bam -fq assembly/raw_reads/Plantago_pacbio_no_mito_chloro.fastq
 bgzip -c -l 9 Plantago_pacbio_no_mito_chloro.fastq > Plantago_pacbio_no_mito_chloro.fastq.gz
-
 ```
 
-canu.sh
-```
-#canu -p Po_2021 -d canu_2021 genomeSize=584m \
-#-correct -pacbio Plantago_pacbio_no_mito_chloro.fastq.gz \
-#corMhapSensitivity=high corMinCoverage=0 corOutCoverage=200 correctedErrorRate=0.105 \
-#gridEngineArrayOption="-a ARRAY_JOBS%20" gridOptions="--partition=batch --nodes=1 --time=24:00:00"
+5. Genome size prediction and contig assembly
 
-#canu -p Po_2021 -d canu_2021 genomeSize=584m \
-#-trim -corrected -pacbio "canu_2021/Po_2021.correctedReads.fasta.gz" \
-#correctedErrorRate=0.105 gridOptions="--partition=batch --nodes=1 --time=72:00:00"
-
-#canu -p Po_2021 -d canu_2021 genomeSize=584m \
-#-assemble -trimmed -corrected -pacbio "canu_2021/Po_2021.trimmedReads.fasta.gz" \
-#correctedErrorRate=0.105 batMemory=9 ovbMemory=16 ovsMemory=16 executiveMemory=1 cnsMemory=20 cnsThreads=8 \
-#gridOptions="--partition=batch --nodes=1 --time=24:00:00" "batOptions=-dg 3 -db 3 -dr 1 -ca 500 -cp 50" utgovlMemory=30
-
+To predict Plantago ovata genome size, I utilized publicly short read genomic Illumina data (SRR10076762) using genomescope2 (https://github.com/tbenavi1/genomescope2.0).
+I run three steps of Canu on clean PacBio reads to generate contig assembly.
 
 ```
+canu -p Po_2021 -d canu_2021 genomeSize=584m \
+-correct -pacbio Plantago_pacbio_no_mito_chloro.fastq.gz \
+corMhapSensitivity=high corMinCoverage=0 corOutCoverage=200 correctedErrorRate=0.105 \
+gridEngineArrayOption="-a ARRAY_JOBS%20" gridOptions="--partition=batch --nodes=1 --time=24:00:00"
 
-polish.sh
+canu -p Po_2021 -d canu_2021 genomeSize=584m \
+-trim -corrected -pacbio "canu_2021/Po_2021.correctedReads.fasta.gz" \
+correctedErrorRate=0.105 gridOptions="--partition=batch --nodes=1 --time=72:00:00"
 
+canu -p Po_2021 -d canu_2021 genomeSize=584m \
+-assemble -trimmed -corrected -pacbio "canu_2021/Po_2021.trimmedReads.fasta.gz" \
+correctedErrorRate=0.105 batMemory=9 ovbMemory=16 ovsMemory=16 executiveMemory=1 cnsMemory=20 cnsThreads=8 \
+gridOptions="--partition=batch --nodes=1 --time=24:00:00" "batOptions=-dg 3 -db 3 -dr 1 -ca 500 -cp 50" utgovlMemory=30
+```
+
+6. Polishing
+
+After contig assembly, I polished the genome with clean raw data. As far as I am aware PacBio tools accept only files generated from their sequencer or processed using their tools. This means I cannot use clean PacBio reads in fastq format. I do not want chloroplast and mithochondrial reads that were still present in PacBio raw reads polished the assembled contigs. To prevent this, we needed to filter original reads (native bam files).
+
+This is how I did it:
+
+Creating index files
 ```
 for i in *.subreads.bam
 do
 pbindex $i
 done
-
+```
+Filtering reads
+```
+###
 ls *.subreads.bam > mymovies.fofn
 dataset create --type SubreadSet --name Plantago PlantagoGenomeSet.subreadset.xml mymovies.fofn
-grep ’@’ ?.fastq > PlantagoGenome.txt
+
+###
+grep ’@’ Plantago_pacbio_no_mito_chloro.fastq > PlantagoGenome.txt
 sed 's|[@,]||g' PlantagoGenome.txt > PlantagoGenome_final.txt
+
+###
 dataset filter PlantagoGenomeSet.subreadset.xml Plantago_filter.subreadset.xml 'qname=PlantagoGenome_final.txt'
+
+###
 pbmm2 align --log-level INFO --log-file pbmm2_log --sample Plantago /hpcfs/users/a1697274/canu_2021/Po_2021.assembled.unassembled.fasta.mmi Plantago_filter.subreadset.xml Plantago.aligned.bam
 
 samtools sort -m 10G -o Plantago_sorted_aligned.bam -T tmp.ali Plantago.aligned.bam
@@ -135,6 +170,8 @@ mv tig00002* bam_2
 mv tig00001* bam_1
 mv tig0000* bam_0
 ```
+
+
 ```
 #!/usr/bin/env python
 import sys
