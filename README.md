@@ -9,7 +9,7 @@ Main steps in generating contigs:
 4. Removing contaminant
 5. Genome size prediction and contig assembly
 6. Polishing
-7. Purging and clipping haplotig
+7. Purging
 
 **Step 1. Genomic DNA extraction and sequencing process were explained in this publication.**
 
