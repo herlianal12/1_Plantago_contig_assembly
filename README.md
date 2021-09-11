@@ -6,7 +6,7 @@ Main steps in generating contigs:
 1. Genomic DNA extraction and PacBio CLR sequencing
 2. Installing bioinformatic tools
 3. Converting PacBio unaligned bam files into fastq files
-4. Removing contaminant
+4. Removing contaminants or unwanted reads
 5. Genome size prediction and contig assembly
 6. Polishing
 7. Purging
@@ -59,7 +59,7 @@ cat *.subreads.fastq > Plantago_pacbio.fastq
 bgzip -c -l 9 Plantago_pacbio.fastq > Plantago_pacbio.fastq.gz
 ```
 
-**Step 4. Removing contaminant**
+**Step 4. Removing contaminants**
 
 I found removing contaminants from PacBio raw reads helped me to solve my problem in contig assembly (Canu). We interested in nuclear genome, so chloroplast and mitochondrial reads are considered as contaminants. Plantago chloroplast genome can be found at https://www.ncbi.nlm.nih.gov/nuccore/MH205737.1/) and a mithochondrial gene is in here https://www.ncbi.nlm.nih.gov/nuccore/EU069524.1/). Only one mitochondrial gene was found in NCBI database (mitochondrial genome is still not available in May 2021). 
 
