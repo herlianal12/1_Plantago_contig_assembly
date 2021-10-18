@@ -6,7 +6,7 @@ Main steps in generating contigs:
 1. Genomic DNA extraction and PacBio CLR sequencing
 2. Installing bioinformatic tools
 3. Converting PacBio unaligned bam files into fastq files
-4. Removing contaminants or unwanted reads
+4. Removing unwanted reads
 5. Genome size prediction and contig assembly
 6. Polishing
 7. Purging
@@ -59,9 +59,9 @@ cat *.subreads.fastq > Plantago_pacbio.fastq
 bgzip -c -l 9 Plantago_pacbio.fastq > Plantago_pacbio.fastq.gz
 ```
 
-**Step 4. Removing contaminants**
+**Step 4. Removing unwanted reads**
 
-I found removing contaminants from PacBio raw reads helped me to solve my problem in contig assembly (Canu). We interested in nuclear genome, so chloroplast and mitochondrial reads are considered as contaminants. Plantago chloroplast genome can be found at https://www.ncbi.nlm.nih.gov/nuccore/MH205737.1/) and a mithochondrial gene is in here https://www.ncbi.nlm.nih.gov/nuccore/EU069524.1/). Only one mitochondrial gene was found in NCBI database (mitochondrial genome is still not available in May 2021). 
+I found removing contaminants from PacBio raw reads helped me to solve my problem in contig assembly using Canu. We interested in nuclear genome, so chloroplast and mitochondrial reads are considered as unwanted reads. Plantago chloroplast genome can be found at https://www.ncbi.nlm.nih.gov/nuccore/MH205737.1/) and a mithochondrial gene is in here https://www.ncbi.nlm.nih.gov/nuccore/EU069524.1/). Only one mitochondrial gene was found in NCBI database. Mitochondrial genome is still not available in May 2021). 
 
 Creating index file
 ```
@@ -129,7 +129,7 @@ gridOptions="--partition=batch --nodes=1 --time=24:00:00" "batOptions=-dg 3 -db 
 
 **Step 6. Polishing**
 
-After contig assembly, I polished the genome with clean raw data. As far as I am aware PacBio tools accept only files generated from their sequencer or processed using their tools. This means I cannot use clean PacBio reads in fastq format. I do not want chloroplast and mithochondrial reads that were still present in PacBio raw reads polished the assembled contigs. To prevent this, we needed to filter original reads (native bam files).
+After contig assembly, I polished the genome with clean raw data. As far as I am aware PacBio tools accept only files generated from their sequencer or processed using their tools. This means I cannot use clean PacBio reads in fastq format. I do not want chloroplast and mithochondrial reads that were still present in PacBio raw reads to polish the assembled contigs. To prevent this, we needed to filter original reads (native bam files).
 
 This is how I did it:
 
@@ -189,6 +189,8 @@ mv tig0000* bam_0
 
 
 ```
+####modifying from https://raw.githubusercontent.com/harish0201/General_Scripts/master/Fasta_splitter.py
+
 #!/usr/bin/env python
 import sys
 """
@@ -206,22 +208,19 @@ for line in f :
   of.write(line)
 of.close()
 
-####modifying from https://raw.githubusercontent.com/harish0201/General_Scripts/master/Fasta_splitter.py
-mkdir fasta_0 fasta_1 fasta_2 fasta_3 fasta_4 fasta_5 fasta_6 fasta_7
-mv tig00007* fasta_7
-mv tig00006* fasta_6
-mv tig00005* fasta_5
-mv tig00004* fasta_4
-mv tig00003* fasta_3
-mv tig00002* fasta_2
-mv tig00001* fasta_1
-mv tig0000* fasta_0
+
+for i in *.fasta
+do
+samtools faidx $i
+done
 
 for i in *.fasta.fai
 do
 OUTPUT=$(basename "$i" .fasta.fai).bed
 awk -F'\t' '{ print $1,$2}' $i > $OUTPUT
 done
+
+
 
 N=100
 (
@@ -246,14 +245,27 @@ mv tig0000* fasta_0
 ```
 ```
 awk '{ print $1":0-"$2 }' Po_new_new.contigs.fasta.gz.fai > window.txt
-window_7.txt
-window_6.txt
-window_5.txt
-window_4.txt
-window_3.txt
-window_2.txt
-window_1.txt
-window_0.txt
+grep "tig00007" window.txt > window_7.txt
+grep "tig00006" window.txt > window_6.txt
+grep "tig00005" window.txt > window_5.txt
+grep "tig00004" window.txt > window_4.txt
+grep "tig00003" window.txt > window_3.txt
+grep "tig00002" window.txt > window_2.txt
+grep "tig00001" window.txt > window_1.txt
+grep "tig00000" window.txt > window_0.txt
+
+
+
+for window in `cat window_0.txt`
+do
+line=$(echo ${window} | cut -c 1-11)
+echo "gcpp --max-iterations 4 --log-level INFO --log-file polished_seqs/file_0/${line}.log \
+-w ${window} -r fasta_split/fasta_0/${line}.fasta \
+-o polished_seqs/file_0/${line}.polished.fastq,polished_seqs/file_0/${line}.polished.fasta,polished_seqs/file_0/${line}.polished.gff \   
+split/bam_0/${line}.bam"
+done | parallel -j7 --tmpdir TMPDIR_1 --compress
+
+
 
 for window in `cat window_1.txt`
 do
@@ -289,6 +301,33 @@ echo "gcpp --max-iterations 4 --log-level INFO --log-file polished_seqs/file_4/$
 -w ${window} -r fasta_split/fasta_4/${line}.fasta \
 -o polished_seqs/file_4/${line}.polished.fastq,polished_seqs/file_4/${line}.polished.fasta,polished_seqs/file_4/${line}.polished.gff \   
 split/bam_4/${line}.bam"
+done | parallel -j7 --tmpdir TMPDIR_4 --compress
+
+for window in `cat window_5.txt`
+do
+line=$(echo ${window} | cut -c 1-11)
+echo "gcpp --max-iterations 4 --log-level INFO --log-file polished_seqs/file_5/${line}.log \
+-w ${window} -r fasta_split/fasta_5/${line}.fasta \
+-o polished_seqs/file_5/${line}.polished.fastq,polished_seqs/file_5/${line}.polished.fasta,polished_seqs/file_5/${line}.polished.gff \   
+split/bam_5/${line}.bam"
+done | parallel -j7 --tmpdir TMPDIR_4 --compress
+
+for window in `cat window_6.txt`
+do
+line=$(echo ${window} | cut -c 1-11)
+echo "gcpp --max-iterations 4 --log-level INFO --log-file polished_seqs/file_6/${line}.log \
+-w ${window} -r fasta_split/fasta_6/${line}.fasta \
+-o polished_seqs/file_6/${line}.polished.fastq,polished_seqs/file_6/${line}.polished.fasta,polished_seqs/file_6/${line}.polished.gff \   
+split/bam_6/${line}.bam"
+done | parallel -j7 --tmpdir TMPDIR_4 --compress
+
+for window in `cat window_7.txt`
+do
+line=$(echo ${window} | cut -c 1-11)
+echo "gcpp --max-iterations 4 --log-level INFO --log-file polished_seqs/file_7/${line}.log \
+-w ${window} -r fasta_split/fasta_7/${line}.fasta \
+-o polished_seqs/file_7/${line}.polished.fastq,polished_seqs/file_7/${line}.polished.fasta,polished_seqs/file_7/${line}.polished.gff \   
+split/bam_7/${line}.bam"
 done | parallel -j7 --tmpdir TMPDIR_4 --compress
 
 
