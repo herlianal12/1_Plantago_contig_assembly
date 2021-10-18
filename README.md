@@ -345,7 +345,8 @@ cat polished_*.fasta > polished.fasta
 bgzip -c -l 9 polished.fasta > polished.fasta.gz
 ```
 
-purging.sh
+
+**Step 7. Purging**
 ```
 minimap2 -d /hpcfs/users/a1697274/genome/assembly/plantago_genome_sequences/sequel/polished_seqs/polished.fasta.mmi /hpcfs/users/a1697274/genome/assembly/plantago_genome_sequences/sequel/polished_seqs/polished.fasta
 
