@@ -11,7 +11,7 @@ Main steps in generating contigs:
 6. Polishing
 7. Purging
 
-**Step 1. Genomic DNA extraction and sequencing process were explained in this publication.**
+**Step 1. Genomic DNA extraction and sequencing process were explained in the publication (link).**
 
 **Step 2. Installing softwares**
 
@@ -30,6 +30,7 @@ List of main tools for contig assembly:
 - samtools 1.11 :https://github.com/samtools/samtools
 - bedtools 2.29.2 : https://github.com/arq5x/bedtools2 or https://bedtools.readthedocs.io/en/latest/content/tools/bamtofastq.html
 
+Detail list of tools can be found in Supplementary File Table 6 (link)
 
 **Step 3. Converting PacBio unaligned bam files into fastq files**
 
