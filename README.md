@@ -7,9 +7,10 @@ Main steps in generating contigs:
 2. Installing bioinformatic tools
 3. Converting PacBio unaligned bam files into fastq files
 4. Removing unwanted reads
-5. Genome size prediction and contig assembly
-6. Polishing
-7. Purging
+5. Genome size prediction
+6. Contig assembly
+7. Polishing
+8. Purging
 
 **Step 1. Genomic DNA extraction and sequencing processes were explained in the publication (link).**
 
@@ -107,9 +108,37 @@ bamToFastq -i Plantago_pacbio_no_mito_chloro.bam -fq Plantago_pacbio_no_mito_chl
 bgzip -c -l 9 Plantago_pacbio_no_mito_chloro.fastq > Plantago_pacbio_no_mito_chloro.fastq.gz
 ```
 
-**Step 5. Genome size prediction and contig assembly**
-
+**Step 5. Genome size prediction**
 To predict Plantago ovata genome size, I utilized publicly short read genomic Illumina data (SRR10076762) using genomescope2 (https://github.com/tbenavi1/genomescope2.0).
+
+```
+jellyfish count -C -m 21 -s 1000000000 -t 10 *.fastq -o reads_21.jf
+jellyfish count -C -m 31 -s 3000000000 -t 20 *.fastq -o reads_31.jf
+jellyfish count -C -m 39 -s 3000000000 -t 10 *.fastq -o reads_39.jf
+jellyfish count -C -m 45 -s 3000000000 -t 20 *.fastq -o reads_45.jf
+jellyfish count -C -m 50 -s 3000000000 -t 20 *.fastq -o reads_50.jf
+jellyfish count -C -m 70 -s 3000000000 -t 30 *.fastq -o reads_70.jf
+jellyfish count -C -m 100 -s 3000000000 -t 50 *.fastq -o reads_100.jf
+
+jellyfish histo -t 10 reads_21.jf > reads_21.histo
+jellyfish histo -t 10 reads_31.jf > reads_31.histo
+jellyfish histo -t 10 reads_39.jf > reads_39.histo
+jellyfish histo -t 10 reads_45.jf > reads_45.histo
+jellyfish histo -t 10 reads_50.jf > reads_50.histo
+jellyfish histo -t 10 reads_70.jf > reads_70.histo
+jellyfish histo -t 10 reads_100.jf > reads_100.histo
+
+Rscript genomescope.R reads_21.histo 21 150 genomescope_plantago_21
+Rscript genomescope.R reads_31.histo 31 150 genomescope_plantago_31
+Rscript genomescope.R reads_39.histo 39 150 genomescope_plantago_39
+Rscript genomescope.R reads_45.histo 45 150 genomescope_plantago_45
+Rscript genomescope.R reads_50.histo 50 150 genomescope_plantago_50
+Rscript genomescope.R reads_70.histo 70 150 genomescope_plantago_70
+Rscript genomescope.R reads_100.histo 100 150 genomescope_plantago_100
+```
+
+**Step 6. Contig assembly**
+
 I run three steps of Canu on clean PacBio reads to generate contig assembly.
 
 ```
@@ -128,7 +157,7 @@ correctedErrorRate=0.105 batMemory=9 ovbMemory=16 ovsMemory=16 executiveMemory=1
 gridOptions="--partition=batch --nodes=1 --time=24:00:00" "batOptions=-dg 3 -db 3 -dr 1 -ca 500 -cp 50" utgovlMemory=30
 ```
 
-**Step 6. Polishing**
+**Step 7. Polishing**
 
 After contig assembly, I polished the genome with clean raw data. As far as I am aware PacBio tools accept only files generated from their sequencer or processed using their tools. This means I cannot use clean PacBio reads in fastq format. I do not want chloroplast and mithochondrial reads still present in PacBio raw reads to polish the assembled contigs. To prevent this, we needed to filter original reads (native bam files).
 
@@ -369,7 +398,7 @@ bgzip -c -l 9 polished.fasta > polished.fasta.gz
 ```
 
 
-**Step 7. Purging haplotigs (alternative contigs)**
+**Step 8. Purging haplotigs (alternative contigs)**
 ```
 ### indexing polished assembly
 minimap2 -d polished.fasta.mmi polished.fasta
