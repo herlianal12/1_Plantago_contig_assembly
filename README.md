@@ -378,7 +378,7 @@ minimap2 -d polished.fasta.mmi polished.fasta
 minimap2 -t 4 -ax map-pb polished.fasta.mmi Plantago_pacbio_no_mito_chloro.fasta --secondary=no \
 | samtools sort -m 1G -o polished_aligned.bam -T polished_tmp.ali
 
-### 
+### purging and clipping
 purge_haplotigs  hist  -b polished_aligned.bam -g polished.fasta  -t 4 -d 200
 
 purge_haplotigs cov -i ./polished_aligned.bam.gencov -l 5 -m 70 -h 190 -o polished_coverage_stats.csv -j 80 -s 80
