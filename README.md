@@ -1,6 +1,6 @@
 # **Plantago contig assembly**
 
-This respository aims to document every step in generating contigs from PacBio CLR reads.
+This repository aims to document every step in generating contigs from PacBio CLR reads.
 
 Main steps in generating contigs:
 1. Genomic DNA extraction and PacBio CLR sequencing
@@ -11,12 +11,12 @@ Main steps in generating contigs:
 6. Polishing
 7. Purging
 
-**Step 1. Genomic DNA extraction and sequencing process were explained in the publication (link).**
+**Step 1. Genomic DNA extraction and sequencing processes were explained in the publication (link).**
 
-**Step 2. Installing softwares**
+**Step 2. Installing software**
 
-I used conda to install all tools and I created several environments due to incompatibility of softwares.
-An example how to create conda environment:
+I used conda to install all tools and I created several environments due to software incompatibility.
+An example of how to create conda environments:
 ```
 conda create -n pacbio
 conda activate pacbio
@@ -46,7 +46,7 @@ bam2fastq -c 9 m54078_170902_041524.subreads.bam -o m54078_170902_041524.subread
 bam2fastq -c 9 m54078_170902_142504.subreads.bam -o m54078_170902_142504.subreads
 bam2fastq -c 9 m54078_170903_003441.subreads.bam -o m54078_170903_003441.subreads 
 
-### if you have a lot of files, you can do this:
+### if you have many files, you can do this:
 
 for i in *.bam
 do
@@ -62,7 +62,7 @@ bgzip -c -l 9 Plantago_pacbio.fastq > Plantago_pacbio.fastq.gz
 
 **Step 4. Removing unwanted reads**
 
-I found removing contaminants from PacBio raw reads helped me to solve my problem in contig assembly using Canu. We interested in nuclear genome, so chloroplast and mitochondrial reads are considered as unwanted reads. Plantago chloroplast genome can be found at https://www.ncbi.nlm.nih.gov/nuccore/MH205737.1/) and a mithochondrial gene is in here https://www.ncbi.nlm.nih.gov/nuccore/EU069524.1/). Only one mitochondrial gene was found in NCBI database. Mitochondrial genome is still not available in May 2021). 
+I found that removing contaminants from PacBio raw reads helped me solve my contig assembly problem using Canu. We are interested in nuclear genome, so chloroplast and mitochondrial reads are considered unwanted reads. Plantago chloroplast genome can be found at https://www.ncbi.nlm.nih.gov/nuccore/MH205737.1/) and a mitochondrial gene is in here https://www.ncbi.nlm.nih.gov/nuccore/EU069524.1/). Only one mitochondrial gene was found in the NCBI database. The mitochondrial genome is still not available in May 2021). 
 
 Creating index file
 ```
@@ -88,7 +88,7 @@ bamToFastq -i Plantago_pacbio_no_chloro.bam -fq Plantago_pacbio_no_chloro.fastq
 bgzip -c -l 9 Plantago_pacbio_no_chloro.fastq > Plantago_pacbio_no_chloro.fastq.gz
 ```
 
-Removing mithochondrial reads
+Removing mitochondrial reads
 ```
 data="Plantago_pacbio_no_chloro.fastq.gz"
 index="plantago_mitocondria.fasta.gz.mmi"
@@ -130,7 +130,7 @@ gridOptions="--partition=batch --nodes=1 --time=24:00:00" "batOptions=-dg 3 -db 
 
 **Step 6. Polishing**
 
-After contig assembly, I polished the genome with clean raw data. As far as I am aware PacBio tools accept only files generated from their sequencer or processed using their tools. This means I cannot use clean PacBio reads in fastq format. I do not want chloroplast and mithochondrial reads that were still present in PacBio raw reads to polish the assembled contigs. To prevent this, we needed to filter original reads (native bam files).
+After contig assembly, I polished the genome with clean raw data. As far as I am aware PacBio tools accept only files generated from their sequencer or processed using their tools. This means I cannot use clean PacBio reads in fastq format. I do not want chloroplast and mithochondrial reads still present in PacBio raw reads to polish the assembled contigs. To prevent this, we needed to filter original reads (native bam files).
 
 This is how I did it:
 
