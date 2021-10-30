@@ -416,4 +416,8 @@ purge_haplotigs cov -i ./polished_aligned.bam.gencov -l 5 -m 70 -h 190 -o polish
 purge_haplotigs purge -g polished.fasta -c polishde_coverage_stats.csv -t 4 -r repeat.bed -o purge_polished
 
 purge_haplotigs  clip  -p purge_polished.fasta -h purge_polished.haplotigs.fasta
+
+### renaming and compressing file
+mv clip.fasta Plantago.fasta
+bgzip -c -l 9 Plantago.fasta > Plantago.fasta.gz
 ```
