@@ -109,6 +109,7 @@ bgzip -c -l 9 Plantago_pacbio_no_mito_chloro.fastq > Plantago_pacbio_no_mito_chl
 ```
 
 **Step 5. Genome size prediction**
+
 To predict Plantago ovata genome size, I utilized publicly short read genomic Illumina data (SRR10076762) using genomescope2 (https://github.com/tbenavi1/genomescope2.0).
 
 ```
