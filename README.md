@@ -1,4 +1,4 @@
-# **Plantago contig assembly**
+# **Plantago ovata contig assembly**
 
 This repository aims to document every step in generating contigs from PacBio CLR reads.
 
