@@ -66,14 +66,14 @@ I found removing contaminants from PacBio raw reads helped me to solve my proble
 
 Creating index file
 ```
-minimap2 -d references/plantago_chloroplast.fasta.gz.mmi references/plantago_chloroplast.fasta.gz
-minimap2 -d references/plantago_mitocondria.fasta.gz.mmi references/plantago_mitocondria.fasta.gz
+minimap2 -d plantago_chloroplast.fasta.gz.mmi plantago_chloroplast.fasta.gz
+minimap2 -d plantago_mitocondria.fasta.gz.mmi plantago_mitocondria.fasta.gz
 ```
 Removing chroloplast reads
 ```
-data="assembly/raw_reads/Plantago_pacbio.fastq.gz"
-index="references/plantago_chloroplast.fasta.gz.mmi"
-output="assembly/raw_reads/Plantago_pacbio_no_chloro.bam"
+data="Plantago_pacbio.fastq.gz"
+index="plantago_chloroplast.fasta.gz.mmi"
+output="Plantago_pacbio_no_chloro.bam"
 
 time minimap2 \
 -ax map-pb \
@@ -84,15 +84,15 @@ time minimap2 \
 -o $output
 
 ### Converting a bam file to fastq file then compressing it
-bamToFastq -i assembly/raw_reads/Plantago_pacbio_no_chloro.bam -fq assembly/raw_reads/Plantago_pacbio_no_chloro.fastq
+bamToFastq -i Plantago_pacbio_no_chloro.bam -fq Plantago_pacbio_no_chloro.fastq
 bgzip -c -l 9 Plantago_pacbio_no_chloro.fastq > Plantago_pacbio_no_chloro.fastq.gz
 ```
 
 Removing mithochondrial reads
 ```
-data="assembly/raw_reads/Plantago_pacbio_no_chloro.fastq.gz"
-index="references/plantago_mitocondria.fasta.gz.mmi"
-output="assembly/raw_reads/Plantago_pacbio_no_mito_chloro.bam"
+data="Plantago_pacbio_no_chloro.fastq.gz"
+index="plantago_mitocondria.fasta.gz.mmi"
+output="Plantago_pacbio_no_mito_chloro.bam"
 
 time minimap2 \
 -ax map-pb \
@@ -103,7 +103,7 @@ time minimap2 \
 -o $output
 
 ### Converting a bam file to fastq file then compressing it
-bamToFastq -i assembly/raw_reads/Plantago_pacbio_no_mito_chloro.bam -fq assembly/raw_reads/Plantago_pacbio_no_mito_chloro.fastq
+bamToFastq -i Plantago_pacbio_no_mito_chloro.bam -fq Plantago_pacbio_no_mito_chloro.fastq
 bgzip -c -l 9 Plantago_pacbio_no_mito_chloro.fastq > Plantago_pacbio_no_mito_chloro.fastq.gz
 ```
 
@@ -156,27 +156,34 @@ sed 's|[@,]||g' PlantagoGenome.txt > PlantagoGenome_final.txt
 dataset filter PlantagoGenomeSet.subreadset.xml Plantago_filter.subreadset.xml 'qname=PlantagoGenome_final.txt'
 ```
 
-
+Generating a bam file for each contig
 ```
-###
-pbmm2 align --log-level INFO --log-file pbmm2_log --sample Plantago /hpcfs/users/a1697274/canu_2021/Po_2021.assembled.unassembled.fasta.mmi Plantago_filter.subreadset.xml Plantago.aligned.bam
+### aligning or mapping filtered reads to draft contig assembly
+pbmm2 align --log-level INFO --log-file pbmm2_log -j 5 --sample Plantago canu_2021/Po_2021.contigs.fasta.mmi \
+Plantago_filter.subreadset.xml Plantago.aligned.bam
 
-samtools sort -m 10G -o Plantago_sorted_aligned.bam -T tmp.ali Plantago.aligned.bam
+### sorting and indexing
+samtools sort -m 10G --threads 5 -l 7 -o Plantago_sorted_aligned.bam -T tmp.ali Plantago.aligned.bam
 samtools index -b Plantago_sorted_aligned.bam Plantago_sorted_aligned.bam.bai
 
+### getting conting names
+samtools faidx Po_2021.contigs.fasta > Po_2021.contigs.fasta.fai
+awk '{ print $1 }' Po_2021.contigs.fasta.fai > contigs.txt
 
-awk '{ print $1 }' Po_new_new.contigs.fasta.gz.fai > contigs.txt
 
+### splitting a bam file by contigs
 for line in `cat contigs.txt`
 do
-/hpcfs/users/a1697274/.conda/envs/pacbio/bin/samtools view -bh Plantago_sorted_aligned.bam ${line} > split/${line}.bam
+samtools view -bh Plantago_sorted_aligned.bam ${line} > split/${line}.bam
 done
 
+### indexing each bam file
 for i in split/*.bam
 do
 samtools index -b $i $i.bai
 done
 
+### creating new directories and distributing bam files to the new folders
 mkdir bam_0 bam_1 bam_2 bam_3 bam_4 bam_5 bam_6 bam_7
 mv tig00007* bam_7
 mv tig00006* bam_6
@@ -188,14 +195,16 @@ mv tig00001* bam_1
 mv tig0000* bam_0
 ```
 
-
+Generating a fasta file for each contig
 ```
-####modifying from https://raw.githubusercontent.com/harish0201/General_Scripts/master/Fasta_splitter.py
+### splitting unpolished assembled genome by contigs
+
+### modifying from https://raw.githubusercontent.com/harish0201/General_Scripts/master/Fasta_splitter.py
 
 #!/usr/bin/env python
 import sys
 """
-usage: python Fasta_splitter.py genome.fasta 2> /dev/null
+usage: python Fasta_splitter.py Po_2021.contigs.fasta 2> /dev/null
 """
 f=open(sys.argv[1],"r");
 opened = False
@@ -209,12 +218,13 @@ for line in f :
   of.write(line)
 of.close()
 
-
+### indexing each fasta file using samtools
 for i in *.fasta
 do
 samtools faidx $i
 done
 
+### creating bed files
 for i in *.fasta.fai
 do
 OUTPUT=$(basename "$i" .fasta.fai).bed
@@ -222,7 +232,7 @@ awk -F'\t' '{ print $1,$2}' $i > $OUTPUT
 done
 
 
-
+### indexing fasta files using a PacBio tool
 N=100
 (
 for file in *.fasta
@@ -232,6 +242,8 @@ OUTPUT=$(basename "$file").mmi
 pbmm2 index $file $OUTPUT &
 done
 )
+
+### creating new directories and distributing fasta files to the new folders
 
 mkdir fasta_0 fasta_1 fasta_2 fasta_3 fasta_4 fasta_5 fasta_6 fasta_7
 mv tig00007* fasta_7
@@ -244,8 +256,12 @@ mv tig00001* fasta_1
 mv tig0000* fasta_0
 
 ```
+
+Parallelising polishing step
 ```
-awk '{ print $1":0-"$2 }' Po_new_new.contigs.fasta.gz.fai > window.txt
+
+### getting contig names and their starts and ends (e.g tig00000002:0-23132)
+awk '{ print $1":0-"$2 }' Po_2021.contigs.fasta.fai > window.txt
 grep "tig00007" window.txt > window_7.txt
 grep "tig00006" window.txt > window_6.txt
 grep "tig00005" window.txt > window_5.txt
@@ -256,7 +272,8 @@ grep "tig00001" window.txt > window_1.txt
 grep "tig00000" window.txt > window_0.txt
 
 
-
+### polishing step by running individual script (8 scripts) below:
+### script 1
 for window in `cat window_0.txt`
 do
 line=$(echo ${window} | cut -c 1-11)
@@ -266,8 +283,7 @@ echo "gcpp --max-iterations 4 --log-level INFO --log-file polished_seqs/file_0/$
 split/bam_0/${line}.bam"
 done | parallel -j7 --tmpdir TMPDIR_1 --compress
 
-
-
+### script 2
 for window in `cat window_1.txt`
 do
 line=$(echo ${window} | cut -c 1-11)
@@ -277,6 +293,7 @@ echo "gcpp --max-iterations 4 --log-level INFO --log-file polished_seqs/file_1/$
 split/bam_1/${line}.bam"
 done | parallel -j7 --tmpdir TMPDIR_1 --compress
 
+### script 3
 for window in `cat window_2.txt`
 do
 line=$(echo ${window} | cut -c 1-11)
@@ -286,6 +303,7 @@ echo "gcpp --max-iterations 4 --log-level INFO --log-file polished_seqs/file_2/$
 split/bam_2/${line}.bam"
 done | parallel -j7 --tmpdir TMPDIR_2 --compress
 
+### script 4
 for window in `cat window_3.txt`
 do
 line=$(echo ${window} | cut -c 1-11)
@@ -295,6 +313,7 @@ echo "gcpp --max-iterations 4 --log-level INFO --log-file polished_seqs/file_3/$
 split/bam_3/${line}.bam"
 done | parallel -j7 --tmpdir TMPDIR_3 --compress
 
+### script 5
 for window in `cat window_4.txt`
 do
 line=$(echo ${window} | cut -c 1-11)
@@ -304,6 +323,7 @@ echo "gcpp --max-iterations 4 --log-level INFO --log-file polished_seqs/file_4/$
 split/bam_4/${line}.bam"
 done | parallel -j7 --tmpdir TMPDIR_4 --compress
 
+### script 6
 for window in `cat window_5.txt`
 do
 line=$(echo ${window} | cut -c 1-11)
@@ -313,6 +333,7 @@ echo "gcpp --max-iterations 4 --log-level INFO --log-file polished_seqs/file_5/$
 split/bam_5/${line}.bam"
 done | parallel -j7 --tmpdir TMPDIR_4 --compress
 
+### script 7
 for window in `cat window_6.txt`
 do
 line=$(echo ${window} | cut -c 1-11)
@@ -322,6 +343,7 @@ echo "gcpp --max-iterations 4 --log-level INFO --log-file polished_seqs/file_6/$
 split/bam_6/${line}.bam"
 done | parallel -j7 --tmpdir TMPDIR_4 --compress
 
+### script 8
 for window in `cat window_7.txt`
 do
 line=$(echo ${window} | cut -c 1-11)
@@ -332,7 +354,7 @@ split/bam_7/${line}.bam"
 done | parallel -j7 --tmpdir TMPDIR_4 --compress
 
 
-
+### concatenating and compressing
 cat file_0/*.fasta > polished_0.fasta
 cat file_1/*.fasta > polished_1.fasta
 cat file_2/*.fasta > polished_2.fasta
@@ -347,21 +369,21 @@ bgzip -c -l 9 polished.fasta > polished.fasta.gz
 ```
 
 
-**Step 7. Purging**
+**Step 7. Purging haplotigs (alternative contigs)**
 ```
-minimap2 -d /hpcfs/users/a1697274/genome/assembly/plantago_genome_sequences/sequel/polished_seqs/polished.fasta.mmi /hpcfs/users/a1697274/genome/assembly/plantago_genome_sequences/sequel/polished_seqs/polished.fasta
+### indexing polished assembly
+minimap2 -d polished.fasta.mmi polished.fasta
 
-minimap2 -t 4 -ax map-pb /hpcfs/users/a1697274/genome/assembly/plantago_genome_sequences/sequel/polished_seqs/polished.fasta.mmi \
-/hpcfs/users/a1697274/genome/assembly/raw_reads/Plantago_pacbio_no_mito_chloro_rrna1_2_3.fasta --secondary=no \
-| samtools sort -m 1G -o after_polishing_aligned.bam -T after_polishing_tmp.ali
+### mapping clean read to polished assembly
+minimap2 -t 4 -ax map-pb polished.fasta.mmi Plantago_pacbio_no_mito_chloro.fasta --secondary=no \
+| samtools sort -m 1G -o polished_aligned.bam -T polished_tmp.ali
 
-purge_haplotigs  hist  -b after_polishing_aligned.bam  \
--g /hpcfs/users/a1697274/genome/assembly/plantago_genome_sequences/sequel/polished_seqs/polished.fasta  -t 4 -d 200
+### 
+purge_haplotigs  hist  -b polished_aligned.bam -g polished.fasta  -t 4 -d 200
 
-purge_haplotigs cov -i ./after_polishing_aligned.bam.gencov -l 5 -m 70 -h 190 -o try1_coverage_stats.csv -j 80 -s 80
+purge_haplotigs cov -i ./polished_aligned.bam.gencov -l 5 -m 70 -h 190 -o polished_coverage_stats.csv -j 80 -s 80
 
-purge_haplotigs purge -g /hpcfs/users/a1697274/genome/assembly/plantago_genome_sequences/sequel/polished_seqs/polished.fasta \
--c try1_coverage_stats.csv -t 4 -o try1_final
+purge_haplotigs purge -g polished.fasta -c polishde_coverage_stats.csv -t 4 -r repeat.bed -o purge_polished
 
-purge_haplotigs  clip  -p try1_final.fasta -h try1_final.haplotigs.fasta
+purge_haplotigs  clip  -p purge_polished.fasta -h purge_polished.haplotigs.fasta
 ```
