@@ -1,4 +1,4 @@
-# **Plantago ovata contig assembly**
+# ***Plantago ovata* contig assembly**
 
 This repository aims to document every step in generating contigs from PacBio CLR reads.
 
@@ -63,7 +63,7 @@ bgzip -c -l 9 Plantago_pacbio.fastq > Plantago_pacbio.fastq.gz
 
 **Step 4. Removing unwanted reads**
 
-I found that removing contaminants from PacBio raw reads helped me solve my contig assembly problem using Canu. We are interested in nuclear genome, so chloroplast and mitochondrial reads are considered unwanted reads. Plantago chloroplast genome can be found at https://www.ncbi.nlm.nih.gov/nuccore/MH205737.1/) and a mitochondrial gene is in here https://www.ncbi.nlm.nih.gov/nuccore/EU069524.1/). Only one mitochondrial gene was found in the NCBI database. The mitochondrial genome is still not available in May 2021). 
+I found that removing contaminants from PacBio raw reads helped me solve my contig assembly problem using Canu. We are interested in nuclear genome, so chloroplast and mitochondrial reads are considered unwanted reads. *Plantago* chloroplast genome can be found at https://www.ncbi.nlm.nih.gov/nuccore/MH205737.1/) and a mitochondrial gene is in here https://www.ncbi.nlm.nih.gov/nuccore/EU069524.1/). Only one mitochondrial gene was found in the NCBI database. The mitochondrial genome is still not available in May 2021). 
 
 Creating index file
 ```
