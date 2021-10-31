@@ -24,13 +24,13 @@ conda activate pacbio
 conda install -c bioconda bam2fastx  
 ```
 List of main tools for contig assembly:
-- Pacbio tools (bam2fastx 1.3.1, pbbam 1.6.0, pbcommand 2.1.1, pbcopper 1.9.1, pbcore 2.1.2, pbcoretools 0.8.1, pbgcpp 1.0.0, pbmm2 1.4.0, pbzip2 1.1.13) :   https://github.com/PacificBiosciences/pbbioconda
-- tabix 0.2.6 : https://github.com/samtools/tabix
-- canu 2.1.1 : https://github.com/marbl/canu 
-- minimap2 2.17 : https://github.com/lh3/minimap2
-- samtools 1.11 :https://github.com/samtools/samtools
-- bedtools 2.29.2 : https://github.com/arq5x/bedtools2 or https://bedtools.readthedocs.io/en/latest/content/tools/bamtofastq.html
-- fastqc 0.11.9 : https://github.com/s-andrews/FastQC
+- Pacbio tools (bam2fastx v1.3.1, pbbam v1.6.0, pbcommand v2.1.1, pbcopper v1.9.1, pbcore v2.1.2, pbcoretools v0.8.1, pbgcpp v1.0.0, pbmm2 v1.4.0, pbzip2 v1.1.13) :   https://github.com/PacificBiosciences/pbbioconda
+- tabix v0.2.6 : https://github.com/samtools/tabix
+- canu v2.1.1 : https://github.com/marbl/canu 
+- minimap2 v2.17 : https://github.com/lh3/minimap2
+- samtools v1.11 :https://github.com/samtools/samtools
+- bedtools v2.29.2 : https://github.com/arq5x/bedtools2 or https://bedtools.readthedocs.io/en/latest/content/tools/bamtofastq.html
+- fastqc v0.11.9 : https://github.com/s-andrews/FastQC
 
 More tools can be found in Supplementary File Table 6 (link)
 
