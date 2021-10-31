@@ -1,6 +1,6 @@
 # ***Plantago ovata* contig assembly**
 
-This repository aims to document every step in generating contigs from PacBio CLR reads.
+This repository aims to document major steps in generating contigs from PacBio CLR reads.
 
 Main steps in generating contigs:
 1. Genomic DNA extraction and PacBio CLR sequencing
@@ -30,10 +30,14 @@ List of main tools for contig assembly:
 - minimap2 2.17 : https://github.com/lh3/minimap2
 - samtools 1.11 :https://github.com/samtools/samtools
 - bedtools 2.29.2 : https://github.com/arq5x/bedtools2 or https://bedtools.readthedocs.io/en/latest/content/tools/bamtofastq.html
+- fastqc 0.11.9 : https://github.com/s-andrews/FastQC
 
-Detail list of tools can be found in Supplementary File Table 6 (link)
+More tools can be found in Supplementary File Table 6 (link)
 
 **Step 3. Converting PacBio unaligned bam files into fastq files**
+
+
+Raw data has been deposited in SRA NCBI : SRR14643405
 
 Raw data from PacBio CLR are in bam format. For downstream analysis, we need to convert them into fastq files. 
 
@@ -63,7 +67,8 @@ bgzip -c -l 9 Plantago_pacbio.fastq > Plantago_pacbio.fastq.gz
 
 **Step 4. Removing unwanted reads**
 
-I found that removing contaminants from PacBio raw reads helped me solve my contig assembly problem using Canu. We are interested in nuclear genome, so chloroplast and mitochondrial reads are considered unwanted reads. *Plantago* chloroplast genome can be found at https://www.ncbi.nlm.nih.gov/nuccore/MH205737.1/) and a mitochondrial gene is in here https://www.ncbi.nlm.nih.gov/nuccore/EU069524.1/). Only one mitochondrial gene was found in the NCBI database. The mitochondrial genome is still not available in May 2021). 
+I found that removing contaminants from PacBio raw reads helped me solve my contig assembly problem using Canu. We are interested in nuclear genome, so chloroplast and mitochondrial reads are considered unwanted reads. *Plantago* chloroplast genome can be found at https://www.ncbi.nlm.nih.gov/nuccore/MH205737.1/ and a mitochondrial gene is in here https://www.ncbi.nlm.nih.gov/nuccore/EU069524.1/. Only one mitochondrial gene was found in the NCBI database. The mitochondrial genome is still not available (October 2021). 
+
 
 Creating index file
 ```
