@@ -17,7 +17,7 @@ Main steps in generating contigs:
 **Step 2. Installing software**
 
 I used conda to install all tools and I created several environments due to software incompatibility.
-An example of how to create conda environments:
+An example of how to create a conda environment:
 ```
 conda create -n pacbio
 conda activate pacbio
