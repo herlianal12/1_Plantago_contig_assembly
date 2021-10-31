@@ -1,6 +1,6 @@
 # ***Plantago ovata* contig assembly**
 
-This repository aims to document major steps in generating contigs from PacBio CLR reads.
+Continuous long reads (CLRs) from the PacBio platform (~76X coverage) were used to assemble the *P. ovata* genome.
 
 Main steps in generating contigs:
 1. Genomic DNA extraction and PacBio CLR sequencing
