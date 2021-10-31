@@ -167,8 +167,6 @@ gridOptions="--partition=batch --nodes=1 --time=24:00:00" "batOptions=-dg 3 -db 
 
 After contig assembly, I polished the genome with clean raw data. As far as I am aware PacBio tools accept only files generated from their sequencer or processed using their tools. This means I cannot use clean PacBio reads in fastq format. I do not want chloroplast and mithochondrial reads still present in PacBio raw reads to polish the assembled contigs. To prevent this, we needed to filter original reads (native bam files).
 
-This is how I did it:
-
 Creating index files
 ```
 for i in *.subreads.bam
