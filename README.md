@@ -399,6 +399,12 @@ cat file_7/*.fasta > polished_7.fasta
 
 cat polished_*.fasta > polished.fasta
 bgzip -c -l 9 polished.fasta > polished.fasta.gz
+
+
+### removing bubles from polished contig
+reformat.sh in=polished.fasta out=polished.fixed.fasta trd tuc -Xmx1g ### To make all uppercase
+sed '/^>/s/|arrow//' polished.fixed.fasta > polished.fixed1.fasta ### To remove additional |arrow from contig names
+seqtk subseq polished.fixed1.fasta no_bubles.bed > polished_final.fasta
 ```
 
 
